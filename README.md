@@ -1,5 +1,7 @@
 # Super Home Widget
 
+> 📌 **Note:** This project was prepared for the GDG Adana AI AGENT TALKS event.
+
 [![Pub Version](https://img.shields.io/pub/v/super_home_widget)](https://pub.dev/packages/super_home_widget)
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
 
