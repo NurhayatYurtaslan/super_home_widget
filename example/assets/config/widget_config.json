@@ -1,0 +1,96 @@
+{
+  "widget": {
+    "id": "super_home_widget",
+    "name": "Super Home Widget",
+    "version": "1.0.0"
+  },
+  "styles": {
+    "liquidGlass": {
+      "liquidGlassEnabled": true,
+      "background": {
+        "type": "frosted",
+        "style": "systemMaterial",
+        "color": "#FFFFFF",
+        "opacity": 0.95,
+        "blurRadius": 20
+      },
+      "cornerRadius": 20,
+      "padding": {
+        "horizontal": 20,
+        "vertical": 16
+      },
+      "border": {
+        "enabled": true,
+        "width": 1.5,
+        "color": "#FFFFFF",
+        "opacity": 0.2
+      },
+      "typography": {
+        "fontFamily": "SF Pro Rounded",
+        "titleSize": 22,
+        "bodySize": 15,
+        "captionSize": 13
+      },
+      "colors": {
+        "primary": "#007AFF",
+        "secondary": "#5856D6",
+        "text": "#1C1C1E",
+        "textSecondary": "#3A3A3C"
+      },
+      "shadows": {
+        "enabled": true,
+        "layers": [
+          {
+            "opacity": 0.2,
+            "radius": 12,
+            "offset": { "x": 0, "y": 4 }
+          },
+          {
+            "opacity": 0.1,
+            "radius": 6,
+            "offset": { "x": 0, "y": 2 }
+          }
+        ]
+      },
+      "gradient": {
+        "enabled": false,
+        "colors": [],
+        "angle": 135
+      },
+      "highlights": {
+        "enabled": true,
+        "opacity": 0.4,
+        "position": "top-left"
+      }
+    }
+  },
+  "widgets": {
+    "small": {
+      "style": "liquidGlass",
+      "layout": "compact",
+      "refreshInterval": 3600
+    },
+    "medium": {
+      "style": "liquidGlass",
+      "layout": "expanded",
+      "refreshInterval": 1800
+    },
+    "large": {
+      "style": "liquidGlass",
+      "layout": "detailed",
+      "refreshInterval": 900
+    }
+  },
+  "data": {
+    "sources": [],
+    "updateStrategy": "timeline",
+    "cacheDuration": 300,
+    "initialData": {
+      "title": "Hello Widget",
+      "subtitle": "Welcome to Super Home Widget",
+      "body": "This is an example widget content. Update the fields below to see changes in the widget.",
+      "iconName": "star.fill"
+    }
+  }
+}
+
