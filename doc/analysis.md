@@ -11,7 +11,8 @@
    - [Current Architecture Issues & Proposed Improvements](#current-architecture-issues--proposed-improvements)
    - [Proposed Architecture Layers](#proposed-architecture-layers)
    - [Migration Strategy](#migration-strategy)
-8. [Technical Specifications](#technical-specifications)
+8. [Migration Notes & Breaking Changes](#migration-notes--breaking-changes)
+9. [Technical Specifications](#technical-specifications)
 
 ---
 
@@ -1559,6 +1560,175 @@ graph TB
 - `WidgetConfig`: Single widget configuration
 - `WidgetsConfig`: Container for all widget configurations
 - `SuperHomeWidgetConfig`: Main configuration container
+
+---
+
+## Migration Notes & Breaking Changes
+
+### Default Style Removal (v1.0.0+)
+
+**Breaking Change**: The `DefaultStyle` and `DefaultStyleConfig` have been completely removed from the package. The package now uses only the `LiquidGlassStyle` with an optional solid background fallback.
+
+#### What Changed
+
+1. **Removed Components**:
+   - `lib/styles/default_style.dart` - Deleted
+   - `DefaultStyleConfig` class from `lib/config/config_model.dart` - Removed
+   - `DefaultStyle` class - Removed
+   - `WidgetStyleType.default` enum value - Removed
+
+2. **Updated Components**:
+   - `WidgetStyleType` enum now only contains `liquidGlass`
+   - `StyleManager.getStyle()` now only handles `liquidGlass` type
+   - All widget configurations must use `"style": "liquidGlass"` in JSON config
+
+3. **New Feature**: `liquidGlassEnabled` Flag
+   - Added `bool liquidGlassEnabled` to `LiquidGlassStyleConfig` (default: `true`)
+   - When `true`: Frosted glass effect with blur (default behavior)
+   - When `false`: Solid background color from `background.color`
+
+#### Migration Steps
+
+If you were using the default style, follow these steps:
+
+1. **Update Configuration File** (`widget_config.json`):
+   ```json
+   {
+     "styles": {
+       "liquidGlass": {
+         "liquidGlassEnabled": true,  // Add this flag
+         // ... rest of config
+       }
+     },
+     "widgets": {
+       "small": {
+         "style": "liquidGlass",  // Change from "default" to "liquidGlass"
+         // ... rest of config
+       }
+     }
+   }
+   ```
+
+2. **Update Dart Code**:
+   ```dart
+   // OLD (no longer works):
+   // WidgetStyleType.default
+   
+   // NEW:
+   WidgetStyleType.liquidGlass
+   ```
+
+3. **Update Swift Code** (if using native extensions):
+   - Remove any references to `DefaultStyle` or `defaultStyle`
+   - Ensure `StyleConfigModel` uses `liquidGlass` style
+   - Update `WidgetTimelineProvider` to use `liquidGlass` style
+
+#### Known Issues & Cleanup Required
+
+**⚠️ Important**: The following files still contain references to `DefaultStyle` and need to be updated:
+
+1. **`README.md`**:
+   - Lines 54, 59, 86, 92: Mermaid diagrams showing `DefaultStyle` and `DefaultStyleConfig`
+   - Lines 405, 414, 421, 445, 448, 551, 552, 589: Documentation references to default style
+   - **Action Required**: Update all diagrams and documentation to remove `DefaultStyle` references
+
+2. **Swift Files** (if using custom widget extensions):
+   - `example/ios/SuperHomeWidget/WidgetTimelineProvider.swift`: Contains `defaultStyle` fallback methods
+   - `example/ios/SuperHomeWidget/SuperHomeWidgetBundle.swift`: May contain `defaultStyle` references
+   - **Action Required**: Replace `defaultStyle` with `liquidGlass` style configuration
+
+#### Implementation Details
+
+**Dart Side** (`lib/styles/style_manager.dart`):
+```dart
+// StyleManager now only handles liquidGlass
+WidgetStyle? getStyle(WidgetStyleType type) {
+  switch (type) {
+    case WidgetStyleType.liquidGlass:
+      final styleConfig = config.getStyle('liquidGlass');
+      if (styleConfig == null) return null;
+      return LiquidGlassStyle(config: styleConfig);
+    // No default case - only liquidGlass is supported
+  }
+}
+```
+
+**Swift Side** (`ios/Classes/WidgetView.swift`):
+```swift
+// WidgetBackground now checks liquidGlassEnabled flag
+if style.liquidGlassEnabled {
+    // Apply frosted glass effect
+    .background(.ultraThinMaterial)
+} else {
+    // Use solid background color
+    .background(Color(hex: style.backgroundColor))
+}
+```
+
+#### Configuration Example
+
+**Before (with default style)**:
+```json
+{
+  "styles": {
+    "default": { ... },
+    "liquidGlass": { ... }
+  },
+  "widgets": {
+    "small": {
+      "style": "default"
+    }
+  }
+}
+```
+
+**After (liquid glass only)**:
+```json
+{
+  "styles": {
+    "liquidGlass": {
+      "liquidGlassEnabled": true,
+      "background": {
+        "type": "frosted",
+        "color": "#FFFFFF",
+        "opacity": 0.95
+      },
+      // ... rest of config
+    }
+  },
+  "widgets": {
+    "small": {
+      "style": "liquidGlass"
+    }
+  }
+}
+```
+
+#### Benefits of This Change
+
+1. **Simplified Architecture**: Single style reduces complexity
+2. **Flexible Design**: `liquidGlassEnabled` flag provides both glassmorphic and solid background options
+3. **Better Performance**: Removed unused code and configurations
+4. **Clearer API**: Single style type makes the API more intuitive
+
+#### Troubleshooting
+
+**Issue**: Widget not appearing or showing errors after migration
+
+**Solutions**:
+1. Ensure `"style": "liquidGlass"` is set in all widget configurations
+2. Verify `liquidGlassEnabled` flag is present in style config (defaults to `true` if missing)
+3. Check that `background.color` is provided for solid background fallback
+4. Update all Swift code to remove `defaultStyle` references
+5. Clean and rebuild the project: `flutter clean && flutter pub get`
+
+**Issue**: Widget shows solid background instead of glass effect
+
+**Solutions**:
+1. Check `liquidGlassEnabled` is set to `true` in config
+2. Verify `background.type` is set to `"frosted"`
+3. Ensure iOS version supports blur effects (iOS 14+)
+4. Check `StyleRenderer.swift` implementation for proper blur application
 
 ---
 

@@ -14,6 +14,103 @@ A customizable iOS home screen widget package for Flutter using Apple's WidgetKi
 - 🔄 **Timeline Updates**: Automatic widget refresh with configurable intervals
 - 🌊 **Liquid Glass Effect**: Modern glassmorphic design with blur, gradients, and highlights
 
+## Architecture
+
+### High-Level Architecture
+
+```mermaid
+graph TB
+    A[Flutter App] -->|Widget Configuration| B[Config File<br/>JSON/YAML]
+    A -->|Native Bridge| C[iOS Widget Extension]
+    C -->|WidgetKit API| D[Widget Timeline Provider]
+    D -->|Rendering| E[Widget Views]
+    E -->|Style Application| F[Design Style Engine]
+    F -->|Liquid Glass| G[Liquid Glass Renderer]
+    F -->|Default| H[Default Renderer]
+    B -->|Config Values| F
+    I[App Group Container] -->|Shared Data| C
+    A -->|Write Data| I
+```
+
+### Component Architecture
+
+```mermaid
+graph TB
+    A[SuperHomeWidget Package] --> B[Config Parser]
+    A --> C[Widget Builder]
+    A --> D[Style Manager]
+    A --> E[Native Bridge]
+    
+    B --> F[Config File]
+    
+    C --> G[Core Widget Layer]
+    G --> H[BaseWidgetRender<br/>Abstract Base]
+    H --> I[SmallWidget]
+    H --> J[MediumWidget]
+    H --> K[LargeWidget]
+    
+    D --> L[Widget Style Layer]
+    L --> M[WidgetStyle<br/>Abstract Base]
+    M --> N[DefaultStyle]
+    M --> O[LiquidGlassStyle]
+    
+    L --> P[Style Config Layer]
+    P --> Q[StyleConfig<br/>Abstract Base]
+    Q --> R[DefaultStyleConfig]
+    Q --> S[LiquidGlassStyleConfig]
+    
+    I -.->|Uses| N
+    I -.->|Uses| O
+    J -.->|Uses| N
+    J -.->|Uses| O
+    K -.->|Uses| N
+    K -.->|Uses| O
+    
+    E --> T[iOS Widget Extension]
+    T --> U[WidgetKit Timeline]
+```
+
+### Style-Widget Relationship
+
+```mermaid
+graph LR
+    subgraph "Core Widget Structure"
+        A[BaseWidgetRender]
+        B[SmallWidget]
+        C[MediumWidget]
+        D[LargeWidget]
+    end
+    
+    subgraph "Widget Style Structure"
+        E[WidgetStyle]
+        F[DefaultStyle]
+        G[LiquidGlassStyle]
+    end
+    
+    subgraph "Style Config Structure"
+        H[StyleConfig]
+        I[DefaultStyleConfig]
+        J[LiquidGlassStyleConfig]
+    end
+    
+    A -->|implements| B
+    A -->|implements| C
+    A -->|implements| D
+    
+    E -->|implements| F
+    E -->|implements| G
+    
+    H -->|extends| I
+    H -->|extends| J
+    
+    F -->|uses| I
+    G -->|uses| J
+    
+    B -.->|composes| E
+    C -.->|composes| E
+    D -.->|composes| E
+```
+
 ## Installation
 
 Add this to your package's `pubspec.yaml` file:
@@ -35,20 +132,20 @@ flutter pub get
 
 ### ⚠️ CRITICAL: Widget Extension Required
 
-**Widget'ın iOS home screen'de görünmesi için Widget Extension target'ı oluşturmanız ZORUNLUDUR.**
+**You MUST create a Widget Extension target for the widget to appear on the iOS home screen.**
 
-Widget Extension target'ı olmadan widget "Add Widget" ekranında görünmez.
+Without a Widget Extension target, the widget will NOT appear in the "Add Widget" screen.
 
-**📖 Detaylı kurulum rehberi:** [WIDGET_SETUP.md](WIDGET_SETUP.md)
+**📖 Detailed setup guide:** [WIDGET_SETUP.md](WIDGET_SETUP.md)
 
-**⚡ Hızlı başlangıç:**
-1. Xcode'da `example/ios/Runner.xcworkspace` açın
-2. **File > New > Target** > **Widget Extension** oluşturun
-3. Swift dosyalarını Widget Extension target'ına ekleyin
-4. App Group capability'sini her iki target'a da ekleyin
-5. Build ve run yapın
+**⚡ Quick start:**
+1. Open `example/ios/Runner.xcworkspace` in Xcode
+2. **File > New > Target** > Create **Widget Extension**
+3. Add Swift files to Widget Extension target
+4. Add App Group capability to both targets
+5. Build and run
 
-**Detaylı adımlar için WIDGET_SETUP.md dosyasına bakın.**
+**See WIDGET_SETUP.md for detailed steps.**
 
 ### 1. Add Widget Extension Target
 
@@ -169,6 +266,34 @@ await SuperHomeWidget.initialize(
 );
 ```
 
+### Configuration Flow
+
+```mermaid
+sequenceDiagram
+    participant App as Flutter App
+    participant Asset as Asset Bundle
+    participant Config as Config Parser
+    participant Style as Style Manager
+    participant Widget as Widget Builder
+    participant Native as iOS Extension
+    
+    App->>Asset: Load config file from assets
+    alt Custom config exists
+        Asset->>Config: Provide custom JSON string
+    else Custom config not found
+        Asset-->>Config: File not found
+        Config->>Config: Fall back to default package config
+    end
+    Config->>Config: Parse JSON
+    Config->>Style: Initialize styles from config
+    Style->>Style: Apply style rules from config
+    App->>Widget: Build widget with config
+    Widget->>Style: Get style properties from config
+    Style->>Widget: Return style values
+    Widget->>Native: Render widget with config
+    Native->>Native: Apply visual effects from config
+```
+
 ### Configuration Structure
 
 ```json
@@ -248,7 +373,50 @@ await SuperHomeWidget.initialize(
 | Medium | 329×155 pt | 364×170 pt | Expanded |
 | Large | 329×345 pt | 364×376 pt | Detailed |
 
+```mermaid
+graph TB
+    A[iOS Widget Sizes] --> B[Small<br/>155x155pt]
+    A --> C[Medium<br/>329x155pt]
+    A --> D[Large<br/>329x345pt]
+    
+    B --> E[Compact Layout]
+    C --> F[Expanded Layout]
+    D --> G[Detailed Layout]
+    
+    E --> H[Minimal Content]
+    F --> I[Moderate Content]
+    G --> J[Rich Content]
+```
+
 ## Design Styles
+
+### Style Architecture
+
+```mermaid
+graph TB
+    A[StyleConfig<br/>Abstract Base] --> B[Common Properties]
+    B --> C[Background]
+    B --> D[Corner Radius]
+    B --> E[Padding]
+    B --> F[Typography]
+    B --> G[Colors]
+    B --> H[Shadows]
+    
+    A --> I[DefaultStyleConfig]
+    I --> J[Standard iOS Style]
+    
+    A --> K[LiquidGlassStyleConfig]
+    K --> L[Base Properties]
+    K --> M[Border Config]
+    K --> N[Gradient Config]
+    K --> O[Highlights Config]
+    
+    I --> P[DefaultStyle]
+    K --> Q[LiquidGlassStyle]
+    
+    P --> R[Applied to Widgets]
+    Q --> R
+```
 
 ### Default Style
 
@@ -269,6 +437,185 @@ Modern glassmorphic effect with:
 - Reflective highlights
 - Multi-layer shadows
 - Subtle borders
+
+### Style Comparison
+
+```mermaid
+graph TB
+    A[WidgetStyle] --> B[DefaultStyle]
+    A --> C[LiquidGlassStyle]
+    
+    B --> D[DefaultStyleConfig]
+    D --> E[Solid Backgrounds]
+    D --> F[Standard Shadows]
+    D --> G[System Fonts]
+    D --> H[Static Appearance]
+    
+    C --> I[LiquidGlassStyleConfig]
+    I --> J[Base StyleConfig Properties]
+    I --> K[Frosted Glass Background]
+    I --> L[Multi-layer Shadows]
+    I --> M[Border + Gradient + Highlights]
+    
+    B -.->|Applied to| N[Core Widgets]
+    C -.->|Applied to| N
+    N --> O[SmallWidget]
+    N --> P[MediumWidget]
+    N --> Q[LargeWidget]
+```
+
+## Data Flow
+
+### Widget Update Flow
+
+```mermaid
+sequenceDiagram
+    participant Timeline as Timeline Provider
+    participant Config as Config Manager
+    participant Data as Data Source
+    participant Cache as Cache Manager
+    participant Renderer as Widget Renderer
+    
+    Timeline->>Config: Request widget update
+    Config->>Config: Get widget configuration
+    Config->>Data: Fetch latest data
+    Data->>Cache: Check cache validity
+    alt Cache Valid
+        Cache->>Renderer: Use cached data
+    else Cache Invalid
+        Data->>Data: Fetch new data
+        Data->>Cache: Update cache
+        Cache->>Renderer: Provide fresh data
+    end
+    Renderer->>Renderer: Apply style from config
+    Renderer->>Timeline: Return widget view
+```
+
+### Data Sharing Architecture
+
+```mermaid
+graph TB
+    A[Flutter App] -->|Write Data| B[App Group Container]
+    B -->|Shared Storage| C[iOS Widget Extension]
+    C -->|Read Data| D[Widget Timeline]
+    D -->|Render| E[Widget View]
+    
+    F[Background Updates] -->|Fetch Data| G[Network/API]
+    G -->|Store| B
+    
+    H[User Interaction] -->|Update Config| A
+    A -->|Save Config| I[Config File]
+    I -->|Load| C
+```
+
+## Technical Specifications
+
+### Class Diagram
+
+```mermaid
+classDiagram
+    class BaseWidgetRender {
+        <<abstract>>
+        +WidgetSize size
+        +WidgetLayout layout
+        +WidgetStyle style
+        +WidgetData data
+        +buildNativeConfig()
+        +getDimensions()
+    }
+    
+    class SmallWidget {
+        +WidgetConfig config
+        +buildContentConfig()
+    }
+    
+    class MediumWidget {
+        +WidgetConfig config
+        +buildContentConfig()
+    }
+    
+    class LargeWidget {
+        +WidgetConfig config
+        +buildContentConfig()
+    }
+    
+    class WidgetStyle {
+        <<abstract>>
+        +StyleConfig config
+        +String styleName
+        +toNativeConfig()
+        +getBackgroundConfig()
+        +getTypographyConfig()
+    }
+    
+    class DefaultStyle {
+        +DefaultStyleConfig config
+        +backgroundColor
+        +cornerRadius
+    }
+    
+    class LiquidGlassStyle {
+        +LiquidGlassStyleConfig config
+        +frostedBackground
+        +blurRadius
+        +border
+        +gradient
+    }
+    
+    class StyleConfig {
+        <<abstract>>
+        +BackgroundConfig background
+        +double cornerRadius
+        +PaddingConfig padding
+        +TypographyConfig typography
+        +ColorsConfig colors
+    }
+    
+    class WidgetBuilder {
+        +buildSmallWidget()
+        +buildMediumWidget()
+        +buildLargeWidget()
+    }
+    
+    class StyleManager {
+        +getStyle()
+        +getStyleByName()
+    }
+    
+    BaseWidgetRender <|-- SmallWidget
+    BaseWidgetRender <|-- MediumWidget
+    BaseWidgetRender <|-- LargeWidget
+    
+    WidgetStyle <|-- DefaultStyle
+    WidgetStyle <|-- LiquidGlassStyle
+    
+    SmallWidget --> WidgetStyle : uses
+    MediumWidget --> WidgetStyle : uses
+    LargeWidget --> WidgetStyle : uses
+    
+    WidgetBuilder --> StyleManager : uses
+    StyleManager --> WidgetStyle : creates
+    WidgetBuilder --> BaseWidgetRender : creates
+```
+
+### iOS Requirements
+
+- **Minimum iOS Version**: iOS 14.0+
+- **Framework**: WidgetKit
+- **App Groups**: Required for data sharing between app and widget extension
+- **Capabilities**: 
+  - Background Modes (Background fetch)
+  - App Groups
+  - Widget Extension target
+
+### Flutter Integration
+
+- **Platform Channels**: Method channels for Flutter-to-native communication
+  - Method channel: `com.superhomewidget/widget`
+  - Event channel: `com.superhomewidget/events`
+- **Native Bridge**: `IOSBridge` class (singleton) handles all native communication
+- **App Groups**: For data sharing with widget extension (UserDefaults with suite name)
+- **No Code Generation Required**: All JSON serialization is manual (`fromJson`/`toJson`)
 
 ## Example
 
