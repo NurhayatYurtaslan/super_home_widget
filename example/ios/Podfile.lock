@@ -29,7 +29,7 @@ SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
-  super_home_widget: b19cabefb84ca43c4747b7ecec5e2c4c4625b392
+  super_home_widget: 68441157047833edbb6f66be61b4f1e808860a7e
 
 PODFILE CHECKSUM: e30f02f9d1c72c47bb6344a0a748c9d268180865
 
